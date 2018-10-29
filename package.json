@@ -15,5 +15,15 @@
   "bugs": {
     "url": "https://github.com/RogerioLimas/node-mongodb/issues"
   },
-  "homepage": "https://github.com/RogerioLimas/node-mongodb#readme"
+  "homepage": "https://github.com/RogerioLimas/node-mongodb#readme",
+  "dependencies": {
+    "mongodb": "^3.1.8",
+    "mongoose": "^5.3.7"
+  },
+  "devDependencies": {
+    "eslint": "^5.8.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "nodemon": "^1.18.4"
+  }
 }
