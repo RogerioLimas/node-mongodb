@@ -1,84 +1,89 @@
-const { MongoClient, ObjectId } = require('mongodb');
+const mongoose = require('mongoose');
+const ObjectId = require('mongodb').ObjectId;
+const User = require('./models/User');
+const bodyParser = require('body-parser');
+const express = require('express');
+const app = express();
 
-MongoClient.connect(
-  'mongodb://localhost:27017',
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+mongoose.Promise = global.Promise;
+
+mongoose.connect(
+  'mongodb://localhost:27017/mongoose',
   { useNewUrlParser: true },
-  (err, client) => {
-    if (err) throw err;
-    // console.log(ObjectId());
-
-    console.log('CONNECTED!');
-
-    const db = client.db('animals');
-    // Fetching data
-    // db.collection('mammals')
-    //   .find()
-    //   .toArray((err, result) => {
-    //     if (err) throw err;
-    //     console.log(result);
-    //   });
-    // db.collection('mammals').deleteOne({_id: ObjectId('5bd5939e7f302e0cd887a5d4')},);
-
-    // DELETING DATA
-    const mammals = db.collection('mammals');
-    mammals
-      .deleteOne({
-        name: 'fish',
-      })
-      .then((result) => {
-        console.log(result);
-      });
-
-    // UPDATING DATA - usnaod Operators
-    // mammals
-    //   .findOneAndUpdate(
-    //     { _id: new ObjectId('5bd593f24d08b944fc76bb9f') },
-    //     { $set: { legs: 2 } },
-    //   )
-    //   .then((result) => {
-    //     console.log('Atualizado!');
-
-    //     if(result.ok !== '1') {
-    //       console.error('NÃO HOUVE ATUALIZAÇÃO!');
-
-    //     }
-    //   }).catch((err) => {
-    //     console.log('Erro: ', err);
-    //   });
-
-    // Creating data
-    // db.collection('mammals').insertOne(
-    //   {
-    //     name: 'fish',
-    //     legs: 2,
-    //   },
-    //   (err, result) => {
-    //     if (err) {
-    //       console.log(err);
-    //       return;
-    //     }
-    //     console.log('INSERTED');
-    //   },
-    // );
-  },
 );
-// const mongoose = require('mongoose');
+mongoose.connection
+  .once('open', () => {
+    console.log('CONNECTED');
+  })
+  .on('error', (err) => {
+    console.log('Could not connect', err);
+  });
 
-// mongoose.connect(
-//   'mongodb://localhost:27017/animals',
-//   { useNewUrlParser: true },
-// );
-// mongoose.connection.once('open', () => {
-//   console.log('Connected!');
-// })
-// .on('error', (err) => {
-//   console.error(err);
-// });
+app.get('/', (req, res) => {
+  res.send('ROOT');
+});
 
-// var MongoClient = require('mongodb').MongoClient;
+app.post('/users', (req, res) => {
+  const newUser = new User({
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    isActive: req.body.isActive,
+  });
 
-// MongoClient.connect('mongodb://localhost:27017/animals', { useNewUrlParser: true }, function(err, db) {
-//     if(err) throw err;
-//     console.log('CONNECTED');
-//   },
-// );
+  newUser
+    .save()
+    .then((savedUser) => {
+      res.send(`User saved!\n${savedUser}`);
+    })
+    .catch((err) => {
+      console.log(`Error: ${err}`);
+      res.status(500).send(`Error: ${err}`);
+    });
+});
+
+const port = process.env.PORT || 4444;
+
+app.listen(port, () => {
+  console.log(`App listening on port ${port}!`);
+});
+
+app.get('/users', (req, res) => {
+  // User.findOne({
+
+  // });
+  User.find({})
+    .then((users) => {
+      res.send(users);
+    })
+    .catch((err) => {
+      res.send(`Erro: ${err}`);
+    });
+});
+
+app.patch('/users/:id', (req, res) => {
+  const { id } = req.params;
+  User.findByIdAndUpdate(
+    id,
+    {
+      firstName: 'Letícia',
+    },
+    { new: true },
+  ).then((updatedUser) => {
+    res.status(200).send(`User Updated: ${updatedUser}`);
+  });
+});
+
+app.delete('/users/:id', (req, res) => {
+  const { id } = req.params;
+  User.findByIdAndDelete(id, (err, result) => {
+    if (err) {
+      res.status(500).send(`Error: ${err}`);
+    } else {
+      res.status(200).send(`User Removed: ${result}`);
+      console.log(result);
+    }
+  });
+});
